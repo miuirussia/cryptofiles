@@ -14,9 +14,6 @@ pub fn encrypt_folder(folder_path: &Path) -> Result<String, io::Error> {
     let key_b64 = general_purpose::STANDARD.encode(&key);
     let crypt = new_magic_crypt!(&key_b64, 256);
 
-    let key_path = folder_path.join("key.txt");
-    fs::write(key_path, &key_b64)?;
-
     let mut files_to_encrypt = Vec::new();
     for entry in WalkDir::new(folder_path) {
         let entry = entry?;

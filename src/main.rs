@@ -17,16 +17,29 @@ fn main() {
 
     match command.as_str() {
         "encrypt" => match encrypt::encrypt_folder(folder_path) {
-            Ok(key) => println!("Folder encrypted successfully. Key: {}", key),
+            Ok(key) => {
+                let key_path = folder_path.join("key.txt");
+                match std::fs::write(key_path, &key) {
+                    Ok(_) => println!("Folder encrypted successfully. Key: {}", key),
+                    Err(e) => println!("Error writing key file: {}", e),
+                }
+            }
             Err(e) => println!("Error encrypting folder: {}", e),
         },
         "decrypt" => {
             if args.len() < 4 {
-                println!("Usage: cryptofiles decrypt <folder_path> <key>");
+                println!("Usage: cryptofiles decrypt <folder_path> <key_file_path>");
                 return;
             }
-            let key = &args[3];
-            match decrypt::decrypt_folder(folder_path, key) {
+            let key_path = Path::new(&args[3]);
+            let key = match std::fs::read_to_string(key_path) {
+                Ok(k) => k,
+                Err(e) => {
+                    println!("Error reading key file: {}", e);
+                    return;
+                }
+            };
+            match decrypt::decrypt_folder(folder_path, &key) {
                 Ok(_) => println!("Folder decrypted successfully."),
                 Err(e) => println!("Error decrypting folder: {}", e),
             }
@@ -56,6 +69,8 @@ mod tests {
         fs::write(&subfolder_file, "subfolder file content").unwrap();
 
         let key = encrypt::encrypt_folder(folder_path).unwrap();
+        let key_path = folder_path.join("key.txt");
+        fs::write(&key_path, &key).unwrap();
 
         decrypt::decrypt_folder(&folder_path, &key).unwrap();
 
