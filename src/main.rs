@@ -1,8 +1,8 @@
 use std::env;
 use std::path::Path;
 
-pub mod encrypt;
 pub mod decrypt;
+pub mod encrypt;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,14 +16,12 @@ fn main() {
     let folder_path = Path::new(&args[2]);
 
     match command.as_str() {
-        "encrypt" => {
-            match encrypt::encrypt_folder(folder_path) {
-                Ok(key) => println!("Folder encrypted successfully. Key: {}", key),
-                Err(e) => println!("Error encrypting folder: {}", e),
-            }
-        }
+        "encrypt" => match encrypt::encrypt_folder(folder_path) {
+            Ok(key) => println!("Folder encrypted successfully. Key: {}", key),
+            Err(e) => println!("Error encrypting folder: {}", e),
+        },
         "decrypt" => {
-            if args.len() < 5 {
+            if args.len() < 4 {
                 println!("Usage: cryptofiles decrypt <folder_path> <key>");
                 return;
             }
@@ -53,7 +51,7 @@ mod tests {
         let subfolder_path = folder_path.join("subfolder");
         let subfolder_file = subfolder_path.join("test.txt");
 
-        create_dir_all(subfolder_path).unwrap();
+        create_dir_all(&subfolder_path).unwrap();
         fs::write(&file_path, "hello world").unwrap();
         fs::write(&subfolder_file, "subfolder file content").unwrap();
 
@@ -64,7 +62,7 @@ mod tests {
         let decrypted_file_path = folder_path.join("test.txt");
         let decrypted_content = fs::read_to_string(&decrypted_file_path).unwrap();
 
-        let subfolder_file_path = decrypted_file_path.join("/subfolder/test.txt");
+        let subfolder_file_path = folder_path.join("subfolder/test.txt");
         let subfolder_content = fs::read_to_string(&subfolder_file_path).unwrap();
 
         assert_eq!(decrypted_content, "hello world");
