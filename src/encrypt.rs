@@ -10,7 +10,7 @@ use walkdir::WalkDir;
 
 pub fn encrypt_folder(folder_path: &Path) -> Result<String, io::Error> {
     let mut key = [0u8; 32];
-    rand::thread_rng().fill(&mut key);
+    rand::rng().fill(&mut key);
     let key_b64 = general_purpose::STANDARD.encode(&key);
     let crypt = new_magic_crypt!(&key_b64, 256);
 
