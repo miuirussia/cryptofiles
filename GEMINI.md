@@ -7,8 +7,8 @@ The project uses the AES-256 for encryption, `rand` for generating a random encr
 ## Key Files
 
 -   `src/main.rs`: The main entry point for the command-line application. It handles argument parsing and calls the appropriate encryption or decryption functions.
--   `src/encrypt.rs`: Contains the logic for encrypting a folder's contents and file paths. Don't change return type and arguments of encrypt_folder function.
--   `src/decrypt.rs`: Contains the logic for decrypting a folder's contents and file paths. Don't change return type and arguments of decrypt_folder function.
+-   `src/encrypt.rs`: Contains the logic for encrypting a folder's contents and file paths.
+-   `src/decrypt.rs`: Contains the logic for decrypting a folder's contents and file paths.
 -   `Cargo.toml`: The project's manifest file, which defines the dependencies and project metadata.
 -   `build.sh`: A script to build the project into a WebAssembly (WASM) binary. Don't touch or delete it.
 
