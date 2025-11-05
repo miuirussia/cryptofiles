@@ -8,7 +8,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        println!("Usage: cryptofiles <encrypt|decrypt> <folder_path> [key] [destination_path]");
+        println!("Usage: cryptofiles <encrypt|decrypt> <folder_path> [key]");
         return;
     }
 
@@ -24,12 +24,11 @@ fn main() {
         }
         "decrypt" => {
             if args.len() < 5 {
-                println!("Usage: cryptofiles decrypt <folder_path> <key> <destination_path>");
+                println!("Usage: cryptofiles decrypt <folder_path> <key>");
                 return;
             }
             let key = &args[3];
-            let destination_path = Path::new(&args[4]);
-            match decrypt::decrypt_folder(folder_path, key, destination_path) {
+            match decrypt::decrypt_folder(folder_path, key) {
                 Ok(_) => println!("Folder decrypted successfully."),
                 Err(e) => println!("Error decrypting folder: {}", e),
             }
@@ -43,38 +42,34 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
+    use std::fs::{self, create_dir_all};
     use tempfile::tempdir;
-    use magic_crypt::{new_magic_crypt, MagicCryptTrait};
 
     #[test]
     fn test_encrypt_decrypt() {
         let dir = tempdir().unwrap();
         let folder_path = dir.path();
         let file_path = folder_path.join("test.txt");
+        let subfolder_path = folder_path.join("subfolder");
+        let subfolder_file = subfolder_path.join("test.txt");
+
+        create_dir_all(subfolder_path).unwrap();
         fs::write(&file_path, "hello world").unwrap();
+        fs::write(&subfolder_file, "subfolder file content").unwrap();
 
         let key = encrypt::encrypt_folder(folder_path).unwrap();
 
-        let mc = new_magic_crypt!(&key, 256);
-        let encrypted_folder_name = mc.encrypt_str_to_base64(folder_path.file_name().unwrap().to_str().unwrap());
-        let encrypted_folder_path = folder_path.with_file_name(&encrypted_folder_name);
+        decrypt::decrypt_folder(&folder_path, &key).unwrap();
 
-        assert!(encrypted_folder_path.exists());
-        assert!(folder_path.join("key.txt").exists());
+        let decrypted_file_path = folder_path.join("test.txt");
+        let decrypted_content = fs::read_to_string(&decrypted_file_path).unwrap();
 
-        let decrypted_dir = tempdir().unwrap();
-        let decrypted_destination_path = decrypted_dir.path();
-
-        decrypt::decrypt_folder(&encrypted_folder_path, &key, decrypted_destination_path).unwrap();
-
-        let decrypted_folder_path = decrypted_destination_path.join(folder_path.file_name().unwrap());
-        let decrypted_file_path = decrypted_folder_path.join("test.txt");
-        let decrypted_content = fs::read_to_string(decrypted_file_path).unwrap();
+        let subfolder_file_path = decrypted_file_path.join("/subfolder/test.txt");
+        let subfolder_content = fs::read_to_string(&subfolder_file_path).unwrap();
 
         assert_eq!(decrypted_content, "hello world");
+        assert_eq!(subfolder_content, "subfolder file content");
 
-        fs::remove_dir_all(&encrypted_folder_path).unwrap();
-        fs::remove_file(folder_path.join("key.txt")).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
     }
 }
